@@ -1,0 +1,323 @@
+{
+  "name": "My workflow 3",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Você é um Assistente de Dados altamente preciso, especializado em analisar documentos fiscais brasileiros.\n\nSua tarefa é analisar o documento PDF fornecido, que representa uma ou mais notas fiscais brasileiras, e extrair exclusivamente informações sobre a venda de madeira em metros cúbicos (m³).\n\nRegras obrigatórias:\n\n1. Foco Exclusivo: Ignore completamente qualquer outro item, produto, serviço, frete, imposto ou informação que não seja madeira vendida em m³. Ignore também notas fiscais que não envolvam vendas de madeira em m³.\n    a. Exceção: Não IGNORE o produto que não está m³, chamado BARROTE CUMARU E JATOBA mas coloque a quantidade que está na nota, mesmo não sendo de m³.\n\n2. Escopo: O PDF pode conter uma ou mais notas fiscais. Analise todas as notas presentes no PDF e extraia apenas os dados relevantes conforme especificado.\n\n3. Dados principais a extrair por nota fiscal:\n\n   a. Número da nota fiscal.\n\n   b. Data de emissão da nota fiscal (no formato DD/MM/AAAA, se possível).\n\n   c. Chave de acesso da nota fiscal (exatamente 44 dígitos).\n\n4. Itens de madeira: Para cada item de madeira vendido em m³ em uma nota fiscal, extraia:\n    Itens que NÃO devem ser considerados como madeira:\n\n      - Alisares / Alizares\n\n      - Esquadrias / Batente\n\n      - Cimalha / Meia-cana\n\n      - Lambril / Forro\n\n      - Deck / Decking\n\n   a. Nome ou descrição da madeira.\n\n   b. Quantidade total vendida em metros cúbicos (m³), como um número decimal se aplicável.\n\n5. Ignorar:\n\n   a. Notas fiscais emitidas para o CNPJ 02.353.940/0002-70, pois essas são apenas para transferência interna de produtos entre galpões da mesma empresa.\n\n\n6. Valores nulos: Se qualquer informação não puder ser encontrada ou não for aplicável, use o valor null. Não invente dados nem faça suposições.\n\nFormato de saída obrigatório (JSON): Um array de objetos, onde cada objeto representa uma nota fiscal válida analisada. Se não houver notas válidas, retorne um array vazio [].\n\n[\n  {\n    \"numero_nota_fiscal\": \"string ou null\",\n    \"data_emissao\": \"string ou null\",\n    \"chave_acesso\": \"string ou null\",\n    \"itens_madeira\": [\n      {\n        \"descricao\": \"string ou null\",\n        \"quantidade_m3\": number ou null\n      }\n    ]\n  }\n]\n\nAnalise todo o PDF, extraia os dados de todas as notas fiscais qualificadas e retorne apenas o JSON no formato especificado, sem comentários adicionais, explicações ou texto fora do JSON.\n\nNota fiscal: {{ $json.pagina }}",
+        "options": {
+          "batching": {
+            "batchSize": 3,
+            "delayBetweenBatches": 2
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -560,
+        16
+      ],
+      "id": "b049f5e6-b372-47bf-aa28-612f3cbb3b5b",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -560,
+        240
+      ],
+      "id": "74407c54-cad8-4455-b9bd-bfe1bfad4cd5",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "kTluqCwDz2KORYzB",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fileSelector": "C:\\Users\\Lukinha\\Downloads\\PdfDestinatario.rar\\202308*",
+        "options": {
+          "fileExtension": "pdf"
+        }
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        -1472,
+        16
+      ],
+      "id": "29a679b5-ebaa-417c-a213-18b36a18699a",
+      "name": "Lê todos os arquivos pdf da pasta"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -1056,
+        16
+      ],
+      "id": "9b4f6274-54e8-4024-a006-5e1297d2c5ba",
+      "name": "Extrai os textos dos PDF"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nlet allPages = ''\n\nfor (const item of $input.all()) {\n  allPages += item.json.text\n}\n\nlet pagesArr = allPages.split('Danfe Pack V 2.6.0 nfstock | Alterdata Software\\n\\n')\n\nreturn pagesArr.map(page => ({ json: { pagina: page } }))"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -848,
+        16
+      ],
+      "id": "72e6a133-3a53-43e7-b76e-cb64e05846f4",
+      "name": "Divide em paginas (e opcional criar os chunks)"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "4f9674be-17ea-44f5-85d3-d258a13c32c5",
+              "leftValue": "={{ $json.output }}",
+              "rightValue": "Nehuma",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -224,
+        16
+      ],
+      "id": "f5d8942f-d736-47f3-86e1-09ddf2fb1ec7",
+      "name": "Ignore se o Gemini retonar \"Nenhuma nota\""
+    },
+    {
+      "parameters": {
+        "fieldsToSummarize": {
+          "values": [
+            {
+              "aggregation": "concatenate",
+              "field": "output"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.summarize",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "c524b795-75df-465b-9823-4ccfa170fb8b",
+      "name": "Junta tudo em um json só"
+    },
+    {
+      "parameters": {
+        "operation": "toText",
+        "sourceProperty": "concatenated_output",
+        "binaryPropertyName": "json_criado",
+        "options": {
+          "fileName": "test.json"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        192,
+        0
+      ],
+      "id": "65d697e9-c922-4696-9134-1c7823c54dec",
+      "name": "Transforma em arquivo"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/Users/leocanela/Downloads/n8n/{{ $('Lê todos os arquivos pdf da pasta').item.json.fileName.replace('pdf', 'json') }}",
+        "dataPropertyName": "json_criado",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        416,
+        0
+      ],
+      "id": "fc35e4d9-2bfb-4223-a177-e985a8b5afd8",
+      "name": "Salva o arquivo na mesma pasta como .json"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "aecc1291-770f-44d7-bf2f-ed07ee32a2d5",
+              "leftValue": "={{ $json.fileName }}",
+              "rightValue": "10.pdf",
+              "operator": {
+                "type": "string",
+                "operation": "endsWith"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        -1264,
+        16
+      ],
+      "id": "007f6c29-3a94-4469-b0c0-5d09db4d7a75",
+      "name": "(Remover) Filtra só 1 pdf para testes",
+      "disabled": true
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Ignore se o Gemini retonar \"Nenhuma nota\"",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lê todos os arquivos pdf da pasta": {
+      "main": [
+        [
+          {
+            "node": "(Remover) Filtra só 1 pdf para testes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extrai os textos dos PDF": {
+      "main": [
+        [
+          {
+            "node": "Divide em paginas (e opcional criar os chunks)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Divide em paginas (e opcional criar os chunks)": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ignore se o Gemini retonar \"Nenhuma nota\"": {
+      "main": [
+        [
+          {
+            "node": "Junta tudo em um json só",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Junta tudo em um json só": {
+      "main": [
+        [
+          {
+            "node": "Transforma em arquivo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transforma em arquivo": {
+      "main": [
+        [
+          {
+            "node": "Salva o arquivo na mesma pasta como .json",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "(Remover) Filtra só 1 pdf para testes": {
+      "main": [
+        [
+          {
+            "node": "Extrai os textos dos PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "cdb6bb9d-69dc-441b-8c68-c47b98472aa8",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2fce2fb8b59b427f7e837b85a3fb4684a92c0a5f6df617c93f8f91f359a46530"
+  },
+  "id": "D1hdQGLGkSbWAdCP",
+  "tags": []
+}

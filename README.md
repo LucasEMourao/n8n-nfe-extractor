@@ -35,6 +35,13 @@ O objetivo principal é facilitar a análise de documentos fiscais, automatizand
 
 ![Fluxo n8n](n8n-workflow.png)
 
+## 📥 Download do Fluxo
+
+Se quiser testar este fluxo diretamente no seu **n8n**, basta baixar o arquivo JSON abaixo e importá-lo:
+
+👉 [Baixar fluxo `ExtrairDadosNFs.json`](./ExtrairDadosNFs.json)
+
+
 ---
 
 ## 🔎 Explicação dos Nós
