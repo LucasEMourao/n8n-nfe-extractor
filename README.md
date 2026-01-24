@@ -22,6 +22,21 @@ O objetivo principal é facilitar a análise de documentos fiscais, automatizand
 
 ---
 
+## 🧠 Desafios Técnicos e Aprendizados
+
+Este projeto foi um marco na minha jornada como estudante de Análise e Desenvolvimento de Sistemas, pois me forçou a sair da zona de conforto e explorar camadas mais profundas de infraestrutura e IA.
+
+### 🐧 A Virada de Chave: Windows para Linux (WSL)
+Durante o desenvolvimento, enfrentei dificuldades críticas ao tentar importar bibliotecas específicas no ambiente Windows para o n8n. Esse "atrito" técnico foi o empurrão necessário para eu migrar meu ambiente de desenvolvimento para **Linux (via WSL)**. 
+- **Resultado:** Maior controle sobre dependências, melhor performance em containers Docker e uma compreensão muito mais sólida de sistemas operacionais.
+
+### 🤖 Engenharia de Prompt (Prompt Engineering)
+Para garantir que a IA não "alucinasse" ao ler dados fiscais complexos, dediquei horas ao refinamento da Engenharia de Prompt. 
+- **O desafio:** Fazer a IA distinguir nuances técnicas de unidades de medida e valores sem erros.
+- **Resultado:** O prompt foi tão refinado que a precisão na identificação de materiais em $m^3$ e valores foi de 100%, garantindo a confiabilidade total dos dados filtrados.
+
+---
+
 ## ▶️ Como Usar
 
 1. Abra seu **n8n** e importe o fluxo (`ExtrairDadosNFs.json`).
